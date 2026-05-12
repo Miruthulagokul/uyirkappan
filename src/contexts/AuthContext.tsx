@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5001';
+
 interface User {
   id: string;
   email: string;
@@ -21,40 +23,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check for stored session
+    // Restore session from stored token
+    const token = localStorage.getItem('uyir_token');
     const storedUser = localStorage.getItem('uyir_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (token && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('uyir_token');
+        localStorage.removeItem('uyir_user');
+      }
     }
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Mock authentication
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const mockUser: User = {
-      id: '1',
-      email,
-      role: email.includes('operator') ? 'OPERATOR' : email.includes('driver') ? 'DRIVER' : 'USER',
-      name: email.split('@')[0],
-    };
-    setUser(mockUser);
-    localStorage.setItem('uyir_user', JSON.stringify(mockUser));
+    const res = await fetch(`${API_BASE}/api/auth/signin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Sign in failed' }));
+      throw new Error(body.error || 'Sign in failed');
+    }
+
+    const { token, user: userData } = await res.json();
+    setUser(userData);
+    localStorage.setItem('uyir_token', token);
+    localStorage.setItem('uyir_user', JSON.stringify(userData));
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const mockUser: User = {
-      id: Date.now().toString(),
-      email,
-      role: 'USER',
-      name,
-    };
-    setUser(mockUser);
-    localStorage.setItem('uyir_user', JSON.stringify(mockUser));
+    const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Sign up failed' }));
+      throw new Error(body.error || 'Sign up failed');
+    }
+
+    const { token, user: userData } = await res.json();
+    setUser(userData);
+    localStorage.setItem('uyir_token', token);
+    localStorage.setItem('uyir_user', JSON.stringify(userData));
   };
 
   const signOut = () => {
     setUser(null);
+    localStorage.removeItem('uyir_token');
     localStorage.removeItem('uyir_user');
   };
 

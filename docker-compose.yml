@@ -1,0 +1,40 @@
+services:
+  # ── Frontend (Vite + React) ──────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:5001}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:5001}
+        VITE_MAP_TILE_URL: ${VITE_MAP_TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+        VITE_OSRM_BASE: ${VITE_OSRM_BASE:-https://router.project-osrm.org}
+        VITE_NOMINATIM_BASE: ${VITE_NOMINATIM_BASE:-https://nominatim.openstreetmap.org}
+    container_name: uyirkappan-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - uyirkappan-network
+
+  # ── Backend API (Node/Express + Socket.IO) ───────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: uyirkappan-backend
+    ports:
+      - "${BACKEND_PORT:-5001}:5001"
+    environment:
+      - PORT=5001
+      - JWT_SECRET=${JWT_SECRET:-uyirkappan-dev-secret-key-change-in-production}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    networks:
+      - uyirkappan-network
+
+networks:
+  uyirkappan-network:
+    driver: bridge

@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Example variable values — copy to terraform.tfvars and customize
+# Optimized for Azure for Students ($100 free credits)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# General
+project_name = "uyirkappan"
+environment  = "prod"
+location     = "centralindia"        # Mumbai / Central India (closest to Chennai)
+
+# Container Apps — Frontend (scale-to-zero to save credits!)
+frontend_cpu          = 0.25
+frontend_memory       = "0.5Gi"
+frontend_min_replicas = 0            # Scales to zero when no traffic
+frontend_max_replicas = 2
+
+# Container Apps — Backend
+backend_cpu          = 0.25
+backend_memory       = "0.5Gi"
+backend_min_replicas = 1             # Always keep 1 running for WebSocket
+backend_max_replicas = 2
+
+# Application
+frontend_port = 80
+backend_port  = 5001
+jwt_secret    = "CHANGE-ME-use-openssl-rand-hex-32"
+
+# Container Registry
+acr_sku = "Basic"                    # ~$5/month — cheapest option
