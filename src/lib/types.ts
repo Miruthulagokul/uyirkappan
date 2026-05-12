@@ -104,7 +104,8 @@ export interface EmergencyRequest {
   patientName?: string;
   patientPhone?: string;
   medicalInfo?: MedicalInfo;
-  status: 'SEARCHING' | 'OFFERS_RECEIVED' | 'DISPATCHED' | 'CANCELED';
+  symptoms?: string;
+  status: 'PENDING' | 'SEARCHING' | 'OFFERS_RECEIVED' | 'DISPATCHED' | 'CANCELED';
   offers: Offer[];
   selectedOffer?: Offer;
   createdAt: string;

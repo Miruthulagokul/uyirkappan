@@ -1,12 +1,10 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
-
-// ── Express Setup ────────────────────────────────────────────────────────────
-
 const app = express();
 const server = http.createServer(app);
 

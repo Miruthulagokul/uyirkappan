@@ -21,6 +21,7 @@ export const AITriage = () => {
   const [triageQueue, setTriageQueue] = useState<TriageResult[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEmergencies();
@@ -51,6 +52,26 @@ export const AITriage = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDispatch = async (requestId: string) => {
+    setDispatchingId(requestId);
+    try {
+      // Simulate getting offers and auto-accepting the best one
+      await api.acceptOffer('auto-dispatch', requestId);
+      toast.success('Ambulance dispatched successfully!');
+      
+      // Remove from lists
+      setPendingEmergencies(prev => prev.filter(e => e.id !== requestId));
+      if (triageQueue) {
+        setTriageQueue(prev => prev ? prev.filter(q => q.id !== requestId) : null);
+      }
+    } catch (error) {
+      toast.error('Failed to dispatch ambulance');
+      console.error(error);
+    } finally {
+      setDispatchingId(null);
     }
   };
 
@@ -144,27 +165,41 @@ export const AITriage = () => {
                 <p>Click "Run AI Triage" to generate<br/>the priority queue.</p>
               </div>
             ) : (
-              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+              <div className="space-y-4">
                 {triageQueue.map((item, index) => {
                   const req = pendingEmergencies.find(e => e.id === item.id);
                   return (
-                    <div key={item.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-100 group-[.is-active]:bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                        {index + 1}
+                    <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-card p-4 shadow-sm relative overflow-hidden">
+                      {/* Priority Number Indicator */}
+                      <div className="flex flex-col items-center justify-center border-r border-border pr-4 shrink-0">
+                        <span className="text-xs font-semibold text-muted-foreground mb-1">Priority</span>
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-full font-bold shadow-sm ${index === 0 ? 'bg-red-100 text-red-600' : 'bg-primary/10 text-primary'}`}>
+                          #{index + 1}
+                        </div>
                       </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border bg-card shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold">{item.patientName}</span>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-lg truncate">{item.patientName}</span>
                           <Badge className={getSeverityColor(item.severityLevel)}>{item.severityLevel}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                           {item.reasoning}
                         </p>
                         {req && (
-                          <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                             <span className="text-xs text-muted-foreground truncate max-w-[150px]">{req.location.address}</span>
-                             <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary">
-                               Dispatch <ArrowRight className="h-3 w-3" />
+                          <div className="mt-4 flex flex-wrap justify-between items-center gap-2">
+                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                               <Badge variant="outline" className="bg-transparent">{req.location.address}</Badge>
+                             </div>
+                             <Button 
+                               size="sm" 
+                               className="h-8 gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                               onClick={() => handleDispatch(req.id)}
+                               disabled={dispatchingId === req.id}
+                             >
+                               {dispatchingId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Dispatch Ambulance'} 
+                               <ArrowRight className="h-3 w-3" />
                              </Button>
                           </div>
                         )}
