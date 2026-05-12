@@ -46,6 +46,8 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env:
+          VITE_API_BASE: https://uyir-backend.blueglacier-29c05617.eastasia.azurecontainerapps.io
+          VITE_SOCKET_URL: https://uyir-backend.blueglacier-29c05617.eastasia.azurecontainerapps.io
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
           VITE_OSRM_BASE: https://router.project-osrm.org
           VITE_NOMINATIM_BASE: https://nominatim.openstreetmap.org
