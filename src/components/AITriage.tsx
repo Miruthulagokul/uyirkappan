@@ -62,11 +62,8 @@ export const AITriage = () => {
       await api.acceptOffer('auto-dispatch', requestId);
       toast.success('Ambulance dispatched successfully!');
       
-      // Remove from lists
-      setPendingEmergencies(prev => prev.filter(e => e.id !== requestId));
-      if (triageQueue) {
-        setTriageQueue(prev => prev ? prev.filter(q => q.id !== requestId) : null);
-      }
+      // Update local state to show dispatched status
+      setPendingEmergencies(prev => prev.map(e => e.id === requestId ? { ...e, status: 'DISPATCHED' as const } : e));
     } catch (error) {
       toast.error('Failed to dispatch ambulance');
       console.error(error);
@@ -194,12 +191,13 @@ export const AITriage = () => {
                              </div>
                              <Button 
                                size="sm" 
-                               className="h-8 gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                               className={`h-8 gap-2 ${req.status === 'DISPATCHED' ? 'bg-green-500/10 text-green-600 border border-green-200' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
                                onClick={() => handleDispatch(req.id)}
-                               disabled={dispatchingId === req.id}
+                               disabled={dispatchingId === req.id || req.status === 'DISPATCHED'}
                              >
-                               {dispatchingId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Dispatch Ambulance'} 
-                               <ArrowRight className="h-3 w-3" />
+                               {dispatchingId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 
+                                req.status === 'DISPATCHED' ? 'Dispatched ✓' : 'Dispatch Ambulance'} 
+                               {req.status !== 'DISPATCHED' && <ArrowRight className="h-3 w-3" />}
                              </Button>
                           </div>
                         )}

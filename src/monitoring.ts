@@ -5,13 +5,9 @@ const appInsights = new ApplicationInsights({
     connectionString: import.meta.env.VITE_APPINSIGHTS_CONNECTION_STRING,
 
     enableAutoRouteTracking: true,
-
     autoTrackPageVisitTime: true,
-
     enableCorsCorrelation: true,
-
     disableFetchTracking: false,
-
     disableAjaxTracking: false
   }
 });
