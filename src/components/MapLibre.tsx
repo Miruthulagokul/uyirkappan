@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
-import maplibregl, { Map, Marker, LngLatBoundsLike } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
 import { Location } from '@/lib/types';
 
 interface MapLibreProps {
@@ -11,8 +10,27 @@ interface MapLibreProps {
   onMapClick?: (location: Location) => void;
 }
 
-const TILE_URL =
-  import.meta.env.VITE_MAP_TILE_URL || 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+};
+
+const defaultOptions: google.maps.MapOptions = {
+  disableDefaultUI: false,
+  zoomControl: true,
+  streetViewControl: false,
+  mapTypeControl: false,
+  fullscreenControl: false,
+  styles: [
+    {
+      featureType: 'poi',
+      elementType: 'labels',
+      stylers: [{ visibility: 'off' }],
+    },
+  ],
+};
 
 export const MapLibre = ({
   center = { lat: 13.0827, lng: 80.2707 },
@@ -21,135 +39,115 @@ export const MapLibre = ({
   className = '',
   onMapClick,
 }: MapLibreProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<Map | null>(null);
-  const markersRef = useRef<Marker[]>([]);
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  });
 
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [activePopup, setActivePopup] = useState<number | null>(null);
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: [TILE_URL],
-            tileSize: 256,
-            attribution: '&copy; OpenStreetMap Contributors',
-          },
-        },
-        layers: [
-          {
-            id: 'osm',
-            type: 'raster',
-            source: 'osm',
-          },
-        ],
-      },
-      center: [center.lng, center.lat],
-      zoom: 12,
-    });
-
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    if (onMapClick) {
-      map.current.on('click', (e) => {
-        onMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-      });
-    }
-
-    return () => {
-      map.current?.remove();
-      map.current = null;
-    };
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
   }, []);
 
-  // Update markers
-  useEffect(() => {
-    if (!map.current) return;
+  const onUnmount = useCallback(() => {
+    mapRef.current = null;
+  }, []);
 
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
-
-    // Add new markers
-    markers.forEach((markerData) => {
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = markerData.color || '#0EA5E9';
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([markerData.location.lng, markerData.location.lat])
-        .addTo(map.current!);
-
-      if (markerData.popup) {
-        marker.setPopup(new maplibregl.Popup().setHTML(markerData.popup));
+  const handleClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (onMapClick && e.latLng) {
+        onMapClick({ lat: e.latLng.lat(), lng: e.latLng.lng() });
       }
+    },
+    [onMapClick]
+  );
 
-      markersRef.current.push(marker);
-    });
-  }, [markers]);
-
-  // Update route
+  // Fit bounds when route changes
   useEffect(() => {
-    if (!map.current || !route) return;
+    if (!mapRef.current || !route || route.length === 0) return;
 
-    const sourceId = 'route';
-
-    if (map.current.getSource(sourceId)) {
-      map.current.removeLayer('route-line');
-      map.current.removeSource(sourceId);
-    }
-
-    map.current.addSource(sourceId, {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: route,
-        },
-      },
+    const bounds = new google.maps.LatLngBounds();
+    route.forEach(([lng, lat]) => {
+      bounds.extend({ lat, lng });
     });
-
-    map.current.addLayer({
-      id: 'route-line',
-      type: 'line',
-      source: sourceId,
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
-      paint: {
-        'line-color': '#0EA5E9',
-        'line-width': 4,
-      },
-    });
-
-    // Fit bounds to route
-    const bounds = route.reduce(
-      (bounds, coord) => bounds.extend(coord as [number, number]),
-      new maplibregl.LngLatBounds(route[0] as [number, number], route[0] as [number, number])
-    );
-
-    map.current.fitBounds(bounds as LngLatBoundsLike, { padding: 50 });
+    mapRef.current.fitBounds(bounds, 50);
   }, [route]);
 
-  // Update center
+  // Fly to center when it changes
   useEffect(() => {
-    if (!map.current) return;
-    map.current.flyTo({ center: [center.lng, center.lat], zoom: 14 });
+    if (!mapRef.current) return;
+    mapRef.current.panTo({ lat: center.lat, lng: center.lng });
   }, [center.lat, center.lng]);
 
+  if (loadError) {
+    return (
+      <div className={`flex items-center justify-center rounded-2xl bg-muted ${className}`}>
+        <p className="text-sm text-destructive">Failed to load Google Maps</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className={`flex items-center justify-center rounded-2xl bg-muted ${className}`}>
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading map…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Convert route from [lng, lat] (GeoJSON) to Google Maps LatLng
+  const routePath = route?.map(([lng, lat]) => ({ lat, lng }));
+
   return (
-    <div ref={mapContainer} className={`min-h-[60vh] w-full rounded-2xl ${className}`} />
+    <div className={`min-h-[60vh] w-full overflow-hidden rounded-2xl ${className}`}>
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={{ lat: center.lat, lng: center.lng }}
+        zoom={13}
+        options={defaultOptions}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+        onClick={handleClick}
+      >
+        {/* Markers */}
+        {markers.map((m, i) => (
+          <Marker
+            key={`marker-${i}-${m.location.lat}-${m.location.lng}`}
+            position={{ lat: m.location.lat, lng: m.location.lng }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: m.color || '#0EA5E9',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
+            }}
+            onClick={() => m.popup && setActivePopup(i)}
+          >
+            {activePopup === i && m.popup && (
+              <InfoWindow onCloseClick={() => setActivePopup(null)}>
+                <div className="text-sm font-medium text-gray-900">{m.popup}</div>
+              </InfoWindow>
+            )}
+          </Marker>
+        ))}
+
+        {/* Route Polyline */}
+        {routePath && routePath.length > 0 && (
+          <Polyline
+            path={routePath}
+            options={{
+              strokeColor: '#0EA5E9',
+              strokeOpacity: 0.9,
+              strokeWeight: 4,
+            }}
+          />
+        )}
+      </GoogleMap>
+    </div>
   );
 };
