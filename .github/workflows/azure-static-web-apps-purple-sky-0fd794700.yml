@@ -46,7 +46,7 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env:
-          VITE_MAP_TILE_URL: https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png
+          VITE_MAP_TILE_URL: https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png
           VITE_OSRM_BASE: https://router.project-osrm.org
           VITE_NOMINATIM_BASE: https://nominatim.openstreetmap.org
           VITE_APPINSIGHTS_CONNECTION_STRING: InstrumentationKey=3b202630-90c4-452a-b8b2-83b7bff16b85;IngestionEndpoint=https://eastasia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://eastasia.livediagnostics.monitor.azure.com/;ApplicationId=316f2bd8-2c73-42dc-9ab3-7cf50451bb8c
