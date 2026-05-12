@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard, Truck, Users, Building2, BarChart3,
-  Moon, Sun, Globe, LogOut, Menu, X,
+  Moon, Sun, Globe, LogOut, Menu, X, Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -18,6 +18,7 @@ interface DashboardLayoutProps {
 
 const navItems = [
   { id: 'overview', icon: LayoutDashboard, labelKey: 'dashboard.overview' },
+  { id: 'triage', icon: Sparkles, labelKey: 'AI Triage' },
   { id: 'fleet', icon: Truck, labelKey: 'dashboard.fleet' },
   { id: 'drivers', icon: Users, labelKey: 'dashboard.drivers' },
   { id: 'hospitals', icon: Building2, labelKey: 'dashboard.hospitals' },

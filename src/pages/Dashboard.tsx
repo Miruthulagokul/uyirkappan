@@ -5,6 +5,7 @@ import { KPICard } from '@/components/KPICard';
 import { LiveFleetMap } from '@/components/LiveFleetMap';
 import { RequestsTable } from '@/components/RequestsTable';
 import { AnalyticsCharts } from '@/components/AnalyticsCharts';
+import { AITriage } from '@/components/AITriage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -255,6 +256,11 @@ const Dashboard = () => {
             </Table>
           </div>
         </div>
+      )}
+
+      {/* ─── AI Triage ─────────────────────────────────── */}
+      {activeTab === 'triage' && (
+        <AITriage />
       )}
 
       {/* ─── Hospitals ─────────────────────────────────── */}

@@ -181,7 +181,35 @@ function generateAnalytics() {
 
 // ── Emergency Requests ───────────────────────────────────────────────────────
 
-const emergencyRequests = [];
+const emergencyRequests = [
+  {
+    id: 'ER001',
+    patientName: 'Unknown',
+    phone: 'Unknown',
+    location: { lat: 13.0600, lng: 80.2500, address: 'Near Nungambakkam Station, Chennai' },
+    symptoms: 'Patient is unconscious, not breathing, suspected cardiac arrest.',
+    status: 'PENDING',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'ER002',
+    patientName: 'Ravi Teja',
+    phone: '+919876543201',
+    location: { lat: 13.0550, lng: 80.2450, address: 'Kodambakkam High Road, Chennai' },
+    symptoms: 'Fell off a two-wheeler, bleeding from right arm, possible fracture. Conscious and stable.',
+    status: 'PENDING',
+    createdAt: new Date(Date.now() - 300000).toISOString() // 5 mins ago
+  },
+  {
+    id: 'ER003',
+    patientName: 'Meena Kumari',
+    phone: '+919876543202',
+    location: { lat: 13.0580, lng: 80.2550, address: 'T Nagar Bus Stand, Chennai' },
+    symptoms: 'Severe allergic reaction, face swelling, difficulty breathing. Has history of asthma.',
+    status: 'PENDING',
+    createdAt: new Date(Date.now() - 120000).toISOString() // 2 mins ago
+  }
+];
 
 // ── Users (auth) ─────────────────────────────────────────────────────────────
 

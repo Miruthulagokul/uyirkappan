@@ -121,6 +121,7 @@ const hospitalRoutes     = require('./routes/hospitals');
 const driverRoutes       = require('./routes/drivers');
 const dashboardRoutes    = require('./routes/dashboard');
 const notificationRoutes = require('./routes/notifications');
+const aiRoutes           = require('./routes/ai');
 
 app.use('/api/auth',          authRoutes);
 app.use('/api/bookings',      bookingRoutes);
@@ -130,6 +131,7 @@ app.use('/api/hospitals',     hospitalRoutes);
 app.use('/api/drivers',       driverRoutes);
 app.use('/api/dashboard',     dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai',            aiRoutes);
 
 // ── Health Check ─────────────────────────────────────────────────────────────
 

@@ -40,6 +40,17 @@ router.post('/', (req, res) => {
   }
 });
 
+// GET /api/emergency — Get all pending emergency requests
+router.get('/', (req, res) => {
+  try {
+    const pending = emergencyRequests.filter(e => e.status === 'PENDING' || e.status === 'SEARCHING');
+    res.json(pending);
+  } catch (err) {
+    console.error('Get emergencies error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/emergency/:id/offers — Get offers for emergency request
 router.get('/:id/offers', (req, res) => {
   try {

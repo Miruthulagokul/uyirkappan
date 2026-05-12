@@ -50,6 +50,9 @@ export const api = {
     request(`/api/bookings/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 
   // ── Emergency ─────────────────────────────────────────────
+  getPendingEmergencies: (): Promise<EmergencyRequest[]> =>
+    request('/api/emergency'),
+
   createEmergencyRequest: (data: {
     location: { lat: number; lng: number; address?: string };
     emergencyType: EmergencyType;
@@ -108,4 +111,7 @@ export const api = {
   // ── Notifications ─────────────────────────────────────────
   getNotifications: (): Promise<Notification[]> =>
     request('/api/notifications'),
+  // ── AI Triage ─────────────────────────────────────────────
+  getAITriage: (emergencies: any[]): Promise<{ queue: any[] }> =>
+    request('/api/ai/triage', { method: 'POST', body: JSON.stringify({ emergencies }) }),
 };
